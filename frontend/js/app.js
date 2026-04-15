@@ -170,6 +170,16 @@ async function refreshAll() {
     $("withdrawHint").textContent = info.staked.gt(0)
       ? `Max: ${fmt(info.staked, 4)} tBNB`
       : "";
+
+    // Disable Claim button when user has nothing staked
+    const claimBtn = $("claimBtn");
+    if (info.staked.eq(0)) {
+      claimBtn.disabled = true;
+      claimBtn.title = "You have no active stake to earn rewards from";
+    } else {
+      claimBtn.disabled = false;
+      claimBtn.title = "";
+    }
   } catch (e) {
     console.error("Refresh error:", e);
   }
@@ -213,7 +223,10 @@ async function doWithdraw() {
   try {
     // Pre-validate lock status before sending to MetaMask so the user gets
     // a clear message with the exact remaining time instead of a raw RPC error.
-    const timeLeft = await stakingContract.timeUntilUnlock(userAddress);
+    const [timeLeft, stakedBal] = await Promise.all([
+      stakingContract.timeUntilUnlock(userAddress),
+      stakingContract.stakedBalance(userAddress),
+    ]);
     if (timeLeft.gt(0)) {
       showToast(
         `Still locked — ${fmtSecs(timeLeft.toNumber())} remaining`,
@@ -223,6 +236,13 @@ async function doWithdraw() {
     }
 
     const amount = ethers.utils.parseEther(input);
+    if (amount.gt(stakedBal)) {
+      showToast(
+        `Amount exceeds your stake. Max withdrawable: ${fmt(stakedBal, 4)} tBNB`,
+        "error",
+      );
+      return;
+    }
     const tx = await stakingContract.withdraw(amount);
     showToast("Withdrawal submitted — waiting…");
     await tx.wait();
