@@ -211,6 +211,17 @@ async function doWithdraw() {
   }
   setLoading("withdrawBtn", true);
   try {
+    // Pre-validate lock status before sending to MetaMask so the user gets
+    // a clear message with the exact remaining time instead of a raw RPC error.
+    const timeLeft = await stakingContract.timeUntilUnlock(userAddress);
+    if (timeLeft.gt(0)) {
+      showToast(
+        `Still locked — ${fmtSecs(timeLeft.toNumber())} remaining`,
+        "error",
+      );
+      return;
+    }
+
     const amount = ethers.utils.parseEther(input);
     const tx = await stakingContract.withdraw(amount);
     showToast("Withdrawal submitted — waiting…");
@@ -259,16 +270,30 @@ async function doEmergencyWithdraw() {
 
 // ─── Error parser ─────────────────────────────────────────────────────────────
 function parseError(e) {
-  const msg = e?.error?.message || e?.reason || e?.message || "Unknown error";
-  if (msg.includes("WithdrawalTimelocked")) return "Funds are still locked.";
-  if (msg.includes("InsufficientBalance"))
+  // Collect every human-readable string from the error tree
+  const full = JSON.stringify(e) + (e?.message || "") + (e?.reason || "");
+  if (full.includes("WithdrawalTimelocked"))
+    return "Funds are still locked. Wait for the lock period to expire.";
+  if (full.includes("InsufficientBalance"))
     return "Insufficient staked balance.";
-  if (msg.includes("InsufficientRewardPool")) return "Reward pool is empty.";
-  if (msg.includes("AmountMustBeGreaterThanZero")) return "Amount must be > 0.";
-  if (msg.includes("Pausable: paused") || msg.includes("EnforcedPause"))
-    return "Contract is paused.";
-  if (msg.includes("user rejected")) return "Transaction rejected.";
-  return msg.slice(0, 100);
+  if (full.includes("InsufficientRewardPool"))
+    return "Reward pool is empty — contact the admin.";
+  if (full.includes("AmountMustBeGreaterThanZero"))
+    return "Amount must be greater than 0.";
+  if (full.includes("EnforcedPause") || full.includes("Pausable: paused"))
+    return "Contract is currently paused.";
+  if (full.includes("user rejected") || full.includes("User denied"))
+    return "Transaction rejected.";
+  if (full.includes("insufficient funds"))
+    return "Insufficient wallet balance to cover gas.";
+  // Fallback: surface the shortest meaningful message available
+  const msg =
+    e?.reason ||
+    e?.error?.data?.message ||
+    e?.error?.message ||
+    e?.message ||
+    "Unknown error";
+  return msg.slice(0, 120);
 }
 
 // ─── MetaMask event listeners ─────────────────────────────────────────────────
