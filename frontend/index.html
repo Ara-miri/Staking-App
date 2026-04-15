@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimpleStaking — Earn SRT by staking tBNB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- ─── Header ──────────────────────────────────────────────────────────── -->
+    <header>
+      <div class="container">
+        <nav class="nav">
+          <a class="logo" href="#">
+            <div class="logo-icon">⚡</div>
+            Simple<span>Staking</span>
+          </a>
+          <div id="headerActions">
+            <span id="walletAddress"></span>
+            <a
+              class="explorer-link"
+              href="https://testnet.bscscan.com/address/0xD785A4D649eDc822399dbA587084bfED6Fab123D"
+              target="_blank"
+              rel="noopener"
+            >
+              Contract ↗
+            </a>
+            <button id="walletBtn">Connect Wallet</button>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ─── Connect CTA (shown when wallet not connected) ────────────────────── -->
+    <section id="connectCta">
+      <span class="hero-badge">🌐 BSC Testnet · Chain ID 97</span>
+      <h1 class="hero-title">Stake BNB.<br />Earn Rewards.</h1>
+      <p class="hero-sub">
+        Lock your tBNB for 7 days and earn SRT reward tokens continuously.
+        Withdraw anytime after the lock period with a single click.
+      </p>
+      <ul class="hero-features">
+        <li>Linear reward accrual</li>
+        <li>7-day lock period</li>
+        <li>Emergency exit always available</li>
+        <li>Verified on BSCScan</li>
+      </ul>
+      <button
+        class="btn btn-primary"
+        id="connectCtaBtn"
+        style="font-size: 1rem; padding: 14px 36px"
+      >
+        Connect Wallet
+      </button>
+    </section>
+
+    <!-- ─── Dashboard (shown when wallet connected) ───────────────────────────── -->
+    <main id="dashboard" style="display: none">
+      <div class="container">
+        <!-- Global stats row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total Staked</div>
+            <div class="stat-value" id="statTotalStaked">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Reward Pool</div>
+            <div class="stat-value" id="statRewardPool">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Reward Rate</div>
+            <div class="stat-value" id="statRewardRate">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Lock Period</div>
+            <div class="stat-value" id="statLockPeriod">—</div>
+          </div>
+        </div>
+        <h2 class="section-title">Your Position</h2>
+        <p class="section-sub">Live data refreshes every 10 seconds.</p>
+        <div class="dashboard-grid">
+          <!-- ── Position summary (full width) ─────────────────────────────── -->
+          <div class="card card-full">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon">👤</div>
+                My Staking Position
+              </div>
+              <a
+                class="explorer-link"
+                href="https://testnet.bscscan.com/address/0xD785A4D649eDc822399dbA587084bfED6Fab123D#readContract"
+                target="_blank"
+                rel="noopener"
+                >View on BSCScan ↗</a
+              >
+            </div>
+            <div class="position-grid">
+              <div class="pos-item">
+                <div class="pos-label">Wallet tBNB</div>
+                <div class="pos-value" id="userBnbBalance">—</div>
+              </div>
+              <div class="pos-item">
+                <div class="pos-label">Wallet SRT</div>
+                <div class="pos-value green" id="userSrtBalance">—</div>
+              </div>
+              <div class="pos-item">
+                <div class="pos-label">Staked tBNB</div>
+                <div class="pos-value accent" id="userStaked">—</div>
+              </div>
+              <div class="pos-item">
+                <div class="pos-label">Pending Rewards</div>
+                <div class="pos-value green" id="userRewards">—</div>
+              </div>
+            </div>
+
+            <div class="lock-row">
+              <div class="lock-icon">🔒</div>
+              <div class="lock-info">
+                <div class="lock-label">Time until unlock</div>
+                <div class="lock-timer" id="lockTimer">—</div>
+              </div>
+              <span class="badge" id="lockBadge">—</span>
+            </div>
+          </div>
+          <!-- ── Stake ──────────────────────────────────────────────────────── -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon">⬆️</div>
+                Stake tBNB
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="stakeInput">Amount (tBNB)</label>
+              <div class="input-wrap">
+                <input
+                  class="form-input"
+                  id="stakeInput"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.0"
+                />
+                <span class="input-suffix">tBNB</span>
+                <button class="btn btn-ghost input-max" id="maxStakeBtn">
+                  MAX
+                </button>
+              </div>
+              <div class="input-hint">
+                Lock period resets with each new stake.
+              </div>
+            </div>
+            <button class="btn btn-primary btn-full" id="stakeBtn">
+              Stake tBNB
+            </button>
+          </div>
+
+          <!-- ── Withdraw ───────────────────────────────────────────────────── -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon">⬇️</div>
+                Withdraw
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="withdrawInput"
+                >Amount (tBNB)</label
+              >
+              <div class="input-wrap">
+                <input
+                  class="form-input"
+                  id="withdrawInput"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.0"
+                />
+                <span class="input-suffix">tBNB</span>
+                <button class="btn btn-ghost input-max" id="maxWithdrawBtn">
+                  MAX
+                </button>
+              </div>
+              <div class="input-hint" id="withdrawHint"></div>
+            </div>
+            <button class="btn btn-primary btn-full" id="withdrawBtn">
+              Withdraw + Claim Rewards
+            </button>
+          </div>
+
+          <!-- ── Claim rewards ──────────────────────────────────────────────── -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon">🎁</div>
+                Claim Rewards
+              </div>
+            </div>
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.9rem;
+                margin-bottom: 20px;
+              "
+            >
+              Claim your accrued SRT tokens at any time without touching your
+              staked tBNB. Rewards continue to accrue after claiming.
+            </p>
+            <button class="btn btn-primary btn-full" id="claimBtn">
+              Claim SRT Rewards
+            </button>
+          </div>
+
+          <!-- ── Emergency withdraw ─────────────────────────────────────────── -->
+          <div class="card emergency-card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon">🚨</div>
+                Emergency Withdraw
+              </div>
+            </div>
+            <p class="emergency-note">
+              ⚠️ Immediately retrieves all staked tBNB regardless of the lock
+              period. All accrued rewards are <strong>forfeited</strong>.
+            </p>
+            <button class="btn btn-danger btn-full" id="emergencyBtn">
+              Emergency Withdraw (No Rewards)
+            </button>
+          </div>
+        </div>
+        <!-- /.dashboard-grid -->
+      </div>
+      <!-- /.container -->
+    </main>
+
+    <!-- ─── Footer ───────────────────────────────────────────────────────────── -->
+    <footer>
+      <div class="container">
+        SimpleStaking &nbsp;·&nbsp;
+        <a
+          href="https://testnet.bscscan.com/address/0xD785A4D649eDc822399dbA587084bfED6Fab123D"
+          target="_blank"
+          rel="noopener"
+          >Staking Contract</a
+        >
+        &nbsp;·&nbsp;
+        <a
+          href="https://testnet.bscscan.com/address/0xbE625Fd7125a522de6b9C3883b57bc0880eA18ea"
+          target="_blank"
+          rel="noopener"
+          >SRT Token</a
+        >
+        &nbsp;·&nbsp; BSC Testnet
+      </div>
+    </footer>
+
+    <!-- ─── Toast ────────────────────────────────────────────────────────────── -->
+    <div id="toast" class="toast"></div>
+    <!-- ─── Scripts ──────────────────────────────────────────────────────────── -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

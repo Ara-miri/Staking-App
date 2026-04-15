@@ -1,0 +1,11 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"]
+
+[rpc_endpoints]
+bsc_test = "${RPC_URL}"
+
+[etherscan]
+bsc_test = { key = "${BSCSCAN_API_KEY}", url = "https://api-testnet.bscscan.com/api" }
