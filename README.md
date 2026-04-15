@@ -1,6 +1,8 @@
 ![DApp Screenshot](assets/images/dapp-screenshot.png)
 
-**Website**:
+---
+
+## Website: https://simple-staking-app-one.vercel.app/
 
 # SimpleStaking
 
